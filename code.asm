@@ -1,0 +1,41 @@
+; x69 ASM
+; `Hello World`
+; Made for Chip69
+; By FunWithAlbi
+; 2024
+
+CLS
+
+; Draw (half of) `H`
+
+MV TX, 310
+MV TY, 160
+DRW
+
+MV TX, 310
+MV TY, 170
+DRW
+
+MV TX, 310
+MV TY, 180
+DRW
+
+MV TX, 310
+MV TY, 190
+DRW
+
+MV TX, 310
+MV TY, 200
+DRW
+
+MV TX, 310
+MV TY, 210
+DRW
+
+MV TX, 310
+MV TY, 220
+DRW
+
+MV TX, 320
+MV TY, 190
+DRW
