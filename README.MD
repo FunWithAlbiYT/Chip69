@@ -5,7 +5,6 @@ An emulator for a device that... doesnt exist?
 Before being able to emulate, you must have
 these requirements:
 - Python 3.8+
-- Numpy  1.2+
 
 After those are installed then you can
 emulate doing this:         <br />
