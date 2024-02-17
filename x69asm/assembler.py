@@ -83,6 +83,7 @@ tokenizer = Tokenizer({
     'CLR': r'\bCLR\b',
     'DRW': r'\bDRW\b',
     'DRL': r'\bDRL\b',
+    'DRN': r'\bDRN\b',
     'SLP': r'\bSLP\b',
     'EXT': r'\bEXT\b',
     'MV': r'\bMV\b',
@@ -120,6 +121,20 @@ def drl(args):
 
     if int(letter) <= 26 and int(letter) > 0:
         codes.append(int(hex(0x45) + hex(letter)[2:], 16))
+    else:
+        eCode = str(args[0])
+        error(
+            f"INT out of range: `{eCode}`",
+            f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine)))}",
+            f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), eCode)}{'^' * (ends(getline(fileContent, currentLine), eCode) - starts(getline(fileContent, currentLine), eCode))}"
+        )
+
+@registry.register("DRN SPACE INT")
+def drl(args):
+    nr = args[0]
+
+    if nr <= 9 and nr > -1:
+        codes.append(int(hex(0x50) + hex(nr)[2:], 16))
     else:
         eCode = str(args[0])
         error(

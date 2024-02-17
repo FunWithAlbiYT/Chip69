@@ -33,6 +33,7 @@ class Chip:
             0xA: self.op_A,    # MV EY
             0x1: self.op_1,    # MV TF
             0x45: self.op_45,  # DRL
+            0x50: self.op_50,  # DRN
         }
 
         self.screen = pygame.display.set_mode((640, 320))
@@ -120,6 +121,20 @@ class Chip:
 
         if letter in fontset.letters:
             for y, row in enumerate(fontset.letters[letter]):
+                for x, pixel in enumerate(row):
+                    if pixel == 1:
+                        if 0 <= TX + x < 640 and 0 <= TY + y < 320:
+                            self.vram[TY + y][TX + x] = 1
+
+    def op_50(self, opcode):
+        # 50: Draws a number from the built-in fontset at Xpos TX and Ypos TY starting position
+        TX = self.registers[0]
+        TY = self.registers[1]
+
+        nr = hex(opcode).replace('0x', '')[2:]
+
+        if nr in fontset.numbers:
+            for y, row in enumerate(fontset.numbers[nr]):
                 for x, pixel in enumerate(row):
                     if pixel == 1:
                         if 0 <= TX + x < 640 and 0 <= TY + y < 320:

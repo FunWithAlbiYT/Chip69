@@ -33,7 +33,8 @@ code.
 |-------------- |----------------|---------------|
 | 0x2B6         | screen.clear()         | Clears the screen        |
 | 0x7D0         | screen.draw(TX, TY, EX, EY)         | Draws pixels from point (TX, YX) to point (EX, YX) with white        |
-| 0x45         | screen.drawLetter(TX, TY, ?)         | Draws the ?th letter of the alphabet in point (TX, TY)        |
+| 0x45         | screen.drawLetter(TX, TY, ?)         | Draws the ?th letter of the alphabet at point (TX, TY)        |
+| 0x50         | screen.drawNumber(TX, TY, ?)         | Draws the number ? at point (TX, TY)        |
 | 0xB           | TX = ?         | Sets TX to value to last two bytes of opcode         |
 | 0xC           | TY = ?         | Sets TY to value to last two bytes of opcode         |
 | 0x1           | TF = ?         | Sets TF to value to last two bytes of opcode         |

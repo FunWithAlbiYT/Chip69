@@ -29,8 +29,6 @@ MV EX, 360
 MV EY, 180
 DRW
 
-CLR ; Set the value of all registers to 0
-
 ; Draws letter `H`
 MV TX, 25
 MV TY, 25
@@ -41,8 +39,20 @@ MV TX, 30
 MV TY, 25
 DRL 9
 
+; Draws number `6`
+MV TX, 35
+MV TY, 25
+DRN 6
+
+; Draws number `9`
+MV TX, 40
+MV TY, 25
+DRN 9
+
 ; Sleeps for TF seconds
-MV TF, 10
+MV TF, 8
 SLP
+
+CLR ; Set the value of all registers to 0
 
 EXT ; Exits the program
