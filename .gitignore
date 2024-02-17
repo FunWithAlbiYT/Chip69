@@ -1,2 +1,3 @@
 *.ch69
 !code.ch69
+__pycache__/

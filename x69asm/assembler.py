@@ -1,5 +1,6 @@
 import struct
 import sys
+import os
 import re
 
 compileFile = True
@@ -22,7 +23,10 @@ def getline(text, line):
         return None
 
 def starts(main_string, substring):
-    return main_string.find(substring)
+    if main_string is not None:
+        return main_string.find(substring)
+    else:
+        return -1
 
 def ends(main_string, substring):
     start_index = main_string.find(substring)
@@ -76,10 +80,14 @@ class StatementRegistry:
 
 tokenizer = Tokenizer({
     'CLS': r'\bCLS\b',
+    'CLR': r'\bCLR\b',
     'DRW': r'\bDRW\b',
+    'DRL': r'\bDRL\b',
+    'SLP': r'\bSLP\b',
+    'EXT': r'\bEXT\b',
     'MV': r'\bMV\b',
     'INT': r'\b\d+\b',
-    'REG': r'\b(TX|TY|EX|EY)\b',
+    'REG': r'\b(TX|TY|EX|EY|TF)\b',
     'SPACE': r'\s+',
     'COMMA': r','
 })
@@ -94,19 +102,50 @@ def cls():
 def drw():
     codes.append(int(0x7D0))
 
+@registry.register("DRL")
+def drl():
+    codes.append(int(0x7D0))
+
+@registry.register("SLP")
+def slp():
+    codes.append(int(0x1EC))
+
+@registry.register("EXT")
+def ext():
+    codes.append(int(0x3E7))
+
+@registry.register("CLR")
+def clr():
+    codes.append(int(0x1A4))
+
+@registry.register("DRL INT")
+def drw(args):
+    letter = args[0]
+
+    if int(letter) <= 26 and int(letter) > 0:
+        codes.append(int(hex(0x45) + hex(letter)[2:], 16))
+    else:
+        eCode = str(args[0])
+        error(
+            f"INT out of range: `{eCode}`",
+            f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine)))}",
+            f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), eCode)}{'^' * (ends(getline(fileContent, currentLine), eCode) - starts(getline(fileContent, currentLine), eCode))}"
+        )
+
 @registry.register("MV SPACE REG COMMA SPACE INT")
 def mv(args):
     value = args[1]
     register = args[0]
 
     if len(hex(value)[2:]) < 4:
-        code = 0xB
-        if register == "TY":
-            code = 0xC
-        if register == "EX":
-            code = 0x9
-        if register == "EY":
-            code = 0xA
+        rCodes = {
+            "TX": 0xB,
+            "TY": 0xC,
+            "EX": 0x9,
+            "EY": 0xA,
+            "TF": 0x1
+        }
+        code = rCodes[register]
 
         codes.append(int(hex(code) + hex(value)[2:], 16))
     else:
@@ -165,7 +204,7 @@ def parse_file(filename):
     global currentLine
 
     with open(filename, 'r') as file:
-        fileContent = file.read()
+        fileContent = file.read()+"\n"
         file.seek(0)
         for line in file:
             currentLine += 1
@@ -175,11 +214,13 @@ if len(sys.argv) > 1:
     parse_file(sys.argv[1])
 
     if compileFile == True:
-        with open(sys.argv[1].split(".")[0]+".ch69", "wb") as f:
+        filename = os.path.splitext(sys.argv[1])[0]+".ch69"
+
+        with open(filename, "wb") as f:
             for code in codes:
                 f.write(struct.pack('!H', code))
 
-        print("File assembled as "+sys.argv[1].split(".")[0]+".ch69")
+        print(f"File assembled as {filename}")
     else:
         print("Couldn't assemble file since error occurred.")
 else:

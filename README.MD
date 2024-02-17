@@ -1,5 +1,5 @@
 # Chip69
-An emulator for a device that... doesnt exist?
+An emulator for a device that... doesn't exist?
 
 ### Emulating
 Before being able to emulate, you must have
@@ -33,7 +33,13 @@ code.
 |-------------- |----------------|---------------|
 | 0x2B6         | screen.clear()         | Clears the screen        |
 | 0x7D0         | screen.draw(TX, TY, EX, EY)         | Draws pixels from point (TX, YX) to point (EX, YX) with white        |
+| 0x45         | screen.drawLetter(TX, TY, ?)         | Draws the ?th letter of the alphabet in point (TX, TY)        |
 | 0xB           | TX = ?         | Sets TX to value to last two bytes of opcode         |
 | 0xC           | TY = ?         | Sets TY to value to last two bytes of opcode         |
+| 0x1           | TF = ?         | Sets TF to value to last two bytes of opcode         |
 | 0x9           | EX = ?         | Sets EX to value to last two bytes of opcode         |
 | 0xA           | EY = ?         | Sets EY to value to last two bytes of opcode         |
+| 0x1A4         | registers.clear()         | Sets value of all registers to 0        |
+| 0x3E7          | RAM.clear()         |   Exits the current ROM       |
+| 0x1EC          | time.sleep(TF)         | Sleeps for a TF amount of seconds         |
+

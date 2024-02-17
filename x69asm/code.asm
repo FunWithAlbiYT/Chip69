@@ -28,3 +28,21 @@ MV TY, 180
 MV EX, 360
 MV EY, 180
 DRW
+
+CLR ; Set the value of all registers to 0
+
+; Draws letter `H`
+MV TX, 25
+MV TY, 25
+DRL 8
+
+; Draws letter `H`
+MV TX, 30
+MV TY, 25
+DRL 900000
+
+; Sleeps for TF seconds
+MV TF, 5
+SLP
+
+EXT ; Exits the program

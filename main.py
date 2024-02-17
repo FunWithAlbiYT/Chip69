@@ -1,27 +1,38 @@
-import pygame
-import sys
 from random import randint
+from time import time
+import fontset
+import sys
+
+from os import environ
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+import pygame
 
 class Chip:
     def __init__(self):
         pygame.init()
 
-        self.vram = [[randint(0, 255)] * 640 for _ in range(320)]
+        self.waitTime = time()
+
+        self.vram = [[randint(0, 255) for _ in range(640)] for _ in range(320)]
         self.memory = [0] * 4096
         self.registers = [0] * 5
         self.pc = 0x0
 
         self.opcodes = {
             0x2B6: self.op_2B6, # CLS
+            0x1A4: self.op_1A4, # CLR
             0x7D0: self.op_7D0, # DRW
+            0x3E7: self.op_3E7, # EXT
+            0x1EC: self.op_1EC, # SLP
         }
 
         self.argcodes = {
-            0xB: self.op_B, # MV TX
-            0xC: self.op_C, # MV TY
-            0x9: self.op_9, # MV EX
-            0xA: self.op_A, # MV EY
-            0x1: self.op_1  # DRL
+            0xB: self.op_B,    # MV TX
+            0xC: self.op_C,    # MV TY
+            0x9: self.op_9,    # MV EX
+            0xA: self.op_A,    # MV EY
+            0x1: self.op_1,    # MV TF
+            0x45: self.op_45,  # DRL
         }
 
         self.screen = pygame.display.set_mode((640, 320))
@@ -31,15 +42,27 @@ class Chip:
         # 2B6: Clears the screen
         self.vram = [[0] * 640 for _ in range(320)]
 
+    def op_1A4(self):
+        # 1A4: Sets the value of all registers to 0
+        self.registers = [0] * 5
+
     def op_7D0(self):
         # 7D0: Draws pixels from point (TX, TY) to point (EX, EY)
-
         TX, TY, EX, EY = self.registers[:4]
 
         for y in range(TY, EY + 1):
             for x in range(TX, EX + 1):
                 if 0 <= x < 640 and 0 <= y < 320:
                     self.vram[y][x] = 1
+
+    def op_3E7(self):
+        # 3E7: Exits the currently loaded ROM
+        self.vram = [[0] * 640 for _ in range(320)]
+        self.memory = [0] * 4096
+
+    def op_1EC(self):
+        # 1EC: Stops the program for a TF amount of time
+        self.waitTime = time()
 
     def op_B(self, opcode):
         # 0B: Set register TX to last two bytes of opcode
@@ -76,13 +99,30 @@ class Chip:
             value = opcode & 0xFFF
 
         self.registers[3] = value
-
+    
     def op_1(self, opcode):
-        # 1: Draws a letter from the built in fontset at Xpos TX and Ypos TY starting position
+        # 1: Set register TF to last two bytes of 
+        if (opcode & 0xF0) >> 4 in self.argcodes:
+            value = opcode & 0xF
+        elif opcode >> 8 in self.argcodes:
+            value = opcode & 0xFF
+        elif (opcode >> 12) & 0xFFF in self.argcodes:
+            value = opcode & 0xFFF
 
-        # WIP
+        self.registers[4] = value
 
-        pass
+    def op_45(self, opcode):
+        # 45: Draws a letter from the built-in fontset at Xpos TX and Ypos TY starting position
+        TX = self.registers[0]
+        TY = self.registers[1]
+        letter_index = opcode & 0xFF
+        letter = fontset.letters[letter_index]
+
+        for y, row in enumerate(letter):
+            for x, pixel in enumerate(row):
+                if pixel == 1:
+                    if 0 <= TX + x < 640 and 0 <= TY + y < 320:
+                        self.vram[TY + y][TX + x] = 1
 
     def run(self):
         while True:
@@ -95,23 +135,25 @@ class Chip:
         if self.pc >= len(self.memory):
             return 0x0
         
-        opcode = self.memory[self.pc] << 8 | self.memory[self.pc + 1]
-        self.pc += 2
-        return opcode
+        if (time() - self.waitTime) >= self.registers[4]:
+            opcode = self.memory[self.pc] << 8 | self.memory[self.pc + 1]
+            self.pc += 2
+            return opcode
+        else:
+            return 0x0
     
     def execute_opcode(self, opcode):
         if opcode in self.opcodes:
             self.opcodes[opcode]()
         elif opcode >> 8 in self.argcodes:
             self.argcodes[opcode >> 8](opcode)
-        elif (opcode >> 12) & 0xF in self.argcodes:
+        elif (opcode >> 12) & 0xFFF in self.argcodes:
             self.argcodes[(opcode >> 12) & 0xF](opcode)
+        elif (opcode & 0xF0) >> 4:
+            self.argcodes[(opcode & 0xF0) >> 4](opcode)
         elif opcode != 0x0:
             print("Invalid instruction: " + hex(opcode))
             return
-        
-        if opcode != 0x0:
-            print("Executed instruction: " + hex(opcode))
 
     def _check_events(self):
         for event in pygame.event.get():
@@ -137,7 +179,7 @@ class Chip:
     def load_rom(self, filename):
         with open(filename, 'rb') as f:
             rom_data = f.read()
-        
+
         for i, byte in enumerate(rom_data):
             self.memory[0x0 + i] = byte
 
