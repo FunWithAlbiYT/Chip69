@@ -7,8 +7,8 @@ these requirements:
 - Python >= 3.8
 
 After those are installed then you can
-emulate doing this:
-`$ python main.py rom.ch69`
+emulate doing this:         <br />
+`$ python main.py rom.ch69` <br />
 replace \`rom.ch69\` with the filename of your
 rom that must be located in the /roms/ folder
 
@@ -23,7 +23,7 @@ into Chip69
 Alright, lets start.
 Make sure you have the requirements, they're listed in the [Emulating](#Emulating) section before starting.
 
-This is the code on assembling:
-`$ python assembler.py code.asm`
+This is the code on assembling:  <br />
+`$ python assembler.py code.asm` <br />
 replace \`code.asm\` with the filename of your assembly
 code.
