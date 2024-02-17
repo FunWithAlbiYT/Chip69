@@ -36,13 +36,13 @@ MV TX, 25
 MV TY, 25
 DRL 8
 
-; Draws letter `H`
+; Draws letter `I`
 MV TX, 30
 MV TY, 25
-DRL 900000
+DRL 9
 
 ; Sleeps for TF seconds
-MV TF, 5
+MV TF, 10
 SLP
 
 EXT ; Exits the program

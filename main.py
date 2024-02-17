@@ -115,14 +115,15 @@ class Chip:
         # 45: Draws a letter from the built-in fontset at Xpos TX and Ypos TY starting position
         TX = self.registers[0]
         TY = self.registers[1]
-        letter_index = opcode & 0xFF
-        letter = fontset.letters[letter_index]
 
-        for y, row in enumerate(letter):
-            for x, pixel in enumerate(row):
-                if pixel == 1:
-                    if 0 <= TX + x < 640 and 0 <= TY + y < 320:
-                        self.vram[TY + y][TX + x] = 1
+        letter = chr(int(hex(opcode).replace('0x', '')[2:], 16) + 64)
+
+        if letter in fontset.letters:
+            for y, row in enumerate(fontset.letters[letter]):
+                for x, pixel in enumerate(row):
+                    if pixel == 1:
+                        if 0 <= TX + x < 640 and 0 <= TY + y < 320:
+                            self.vram[TY + y][TX + x] = 1
 
     def run(self):
         while True:
@@ -149,11 +150,14 @@ class Chip:
             self.argcodes[opcode >> 8](opcode)
         elif (opcode >> 12) & 0xFFF in self.argcodes:
             self.argcodes[(opcode >> 12) & 0xF](opcode)
-        elif (opcode & 0xF0) >> 4:
+        elif (opcode & 0xF0) >> 4 in self.argcodes:
             self.argcodes[(opcode & 0xF0) >> 4](opcode)
+        elif opcode & 0xFF00 in self.argcodes:
+            self.argcodes[opcode & 0xFF00](opcode)
+        elif int(hex(opcode).replace('0x', '')[:2], 16) in self.argcodes:
+            self.argcodes[int(hex(opcode).replace('0x', '')[:2], 16)](opcode)
         elif opcode != 0x0:
             print("Invalid instruction: " + hex(opcode))
-            return
 
     def _check_events(self):
         for event in pygame.event.get():

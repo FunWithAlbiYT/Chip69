@@ -102,10 +102,6 @@ def cls():
 def drw():
     codes.append(int(0x7D0))
 
-@registry.register("DRL")
-def drl():
-    codes.append(int(0x45))
-
 @registry.register("SLP")
 def slp():
     codes.append(int(0x1EC))
@@ -118,8 +114,8 @@ def ext():
 def clr():
     codes.append(int(0x1A4))
 
-@registry.register("DRL INT")
-def drw(args):
+@registry.register("DRL SPACE INT")
+def drl(args):
     letter = args[0]
 
     if int(letter) <= 26 and int(letter) > 0:
