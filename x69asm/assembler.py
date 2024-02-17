@@ -2,7 +2,14 @@ import struct
 import sys
 import re
 
+compileFile = True
 codes = []
+
+def error(msg):
+    global compileFile
+
+    compileFile = False
+    print(msg)
 
 class Tokenizer:
     def __init__(self, tokens):
@@ -15,7 +22,7 @@ class Tokenizer:
         while pos < len(code):
             match = self.token_regex.match(code, pos)
             if match is None:
-                print("Invalid token at position:", pos)
+                error("Invalid token: "+code)
                 break
             pos = match.end()
             token_type = match.lastgroup
@@ -40,14 +47,14 @@ class StatementRegistry:
             else:
                 self.statements[signature]()
         else:
-            print(f"Error: No statement found for signature '{signature}'")
+            error(f"Error: No statement found for signature '{signature}'")
 
 tokenizer = Tokenizer({
     'CLS': r'\bCLS\b',
     'DRW': r'\bDRW\b',
     'MV': r'\bMV\b',
     'INT': r'\b\d+\b',
-    'REG': r'\bTX|TY\b',
+    'REG': r'\b(TX|TY)\b',
     'SPACE': r'\s+',
     'COMMA': r','
 })
@@ -75,7 +82,7 @@ def drw(args):
 
         codes.append(int(hex(code) + hex(value)[2:], 16))
     else:
-        raise ValueError("INT out of range. (MV REG, INT)")
+        error("INT out of range. (MV REG, INT)")
 
 def parse(code):
     code = code.split(';', 1)[0].strip()
@@ -111,10 +118,13 @@ def parse_file(filename):
 if len(sys.argv) > 1:
     parse_file(sys.argv[1])
 
-    with open(sys.argv[1].split(".")[0]+".ch69", "wb") as f:
-        for code in codes:
-            f.write(struct.pack('!H', code))
+    if compileFile == True:
+        with open(sys.argv[1].split(".")[0]+".ch69", "wb") as f:
+            for code in codes:
+                f.write(struct.pack('!H', code))
 
-    print("File compiled as "+sys.argv[1].split(".")[0]+".ch69")
+        print("File compiled as "+sys.argv[1].split(".")[0]+".ch69")
+    else:
+        print("Couldn't assemble file since error occured.")
 else:
     print("No file provided.")
