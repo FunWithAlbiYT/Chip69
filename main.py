@@ -8,36 +8,40 @@ class Chip:
 
         self.vram = [[randint(0, 255)] * 640 for _ in range(320)]
         self.memory = [0] * 4096
-        self.registers = [0] * 8
+        self.registers = [0] * 5
         self.pc = 0x0
 
         self.opcodes = {
-            0x02B6: self.op_02B6, # CLS
-            0x07D0: self.op_07D0  # DRW
+            0x2B6: self.op_2B6, # CLS
+            0x7D0: self.op_7D0, # DRW
         }
 
         self.argcodes = {
-            0x0B: self.op_0B, # MV TX
-            0x0C: self.op_0C  # MV TY
+            0xB: self.op_B, # MV TX
+            0xC: self.op_C, # MV TY
+            0x9: self.op_9, # MV EX
+            0xA: self.op_A, # MV EY
+            0x1: self.op_1  # DRL
         }
 
         self.screen = pygame.display.set_mode((640, 320))
-        pygame.display.set_caption("Chip69")
+        pygame.display.set_caption("Chip69 Emulator")
 
-    def op_02B6(self):
-        # 02B6: Clears the screen
+    def op_2B6(self):
+        # 2B6: Clears the screen
         self.vram = [[0] * 640 for _ in range(320)]
 
-    def op_07D0(self):
-        # 07D0: Draws pixel at X point TX and Y point TY
+    def op_7D0(self):
+        # 7D0: Draws pixels from point (TX, TY) to point (EX, EY)
 
-        x = self.registers[0]
-        y = self.registers[1]
+        TX, TY, EX, EY = self.registers[:4]
 
-        if 0 <= x < 640 and 0 <= y < 320:
-            self.vram[y][x] = 1
+        for y in range(TY, EY + 1):
+            for x in range(TX, EX + 1):
+                if 0 <= x < 640 and 0 <= y < 320:
+                    self.vram[y][x] = 1
 
-    def op_0B(self, opcode):
+    def op_B(self, opcode):
         # 0B: Set register TX to last two bytes of opcode
         if opcode >> 8 in self.argcodes:
             value = opcode & 0xFF
@@ -46,14 +50,39 @@ class Chip:
 
         self.registers[0] = value
 
-    def op_0C(self, opcode):
-        # 0C: Set register TX to last two bytes of opcode
+    def op_C(self, opcode):
+        # C: Set register TY to last two bytes of opcode
         if opcode >> 8 in self.argcodes:
             value = opcode & 0xFF
         else:
             value = opcode & 0xFFF
 
         self.registers[1] = value
+
+    def op_9(self, opcode):
+        # 9: Set register EX to last two bytes of opcode
+        if opcode >> 8 in self.argcodes:
+            value = opcode & 0xFF
+        else:
+            value = opcode & 0xFFF
+
+        self.registers[2] = value
+
+    def op_A(self, opcode):
+        # A: Set register EY to last two bytes of opcode
+        if opcode >> 8 in self.argcodes:
+            value = opcode & 0xFF
+        else:
+            value = opcode & 0xFFF
+
+        self.registers[3] = value
+
+    def op_1(self, opcode):
+        # 1: Draws a letter from the built in fontset at Xpos TX and Ypos TY starting position
+
+        # WIP
+
+        pass
 
     def run(self):
         while True:
@@ -92,12 +121,17 @@ class Chip:
 
     def _update_screen(self):
         self.screen.fill((0, 0, 0))
-        
+
+        draw_commands = []
+
         for y in range(320):
             for x in range(640):
                 if self.vram[y][x] == 1:
-                    pygame.draw.rect(self.screen, (255, 255, 255), (x, y, 10, 10))
-        
+                    draw_commands.append((x, y))
+
+        for command in draw_commands:
+            pygame.draw.rect(self.screen, (255, 255, 255), (command[0], command[1], 1, 1))
+
         pygame.display.flip()
 
     def load_rom(self, filename):

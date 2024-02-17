@@ -1,13 +1,30 @@
 ; x69 ASM
-; `Hello World`
+; `Face Drawing`
 ; Made for Chip69
 ; By FunWithAlbi
 ; 2024
 
-CLS
+; DRW call draws pixels from point (TX, TY) to point (EX, EY)
 
-; Draw a pixel
+CLS ; Clear the screen
 
-MV TX, 310
-MV TY, 160
+; Draw the left eye
+MV TX, 280
+MV TY, 120
+MV EX, 300
+MV EY, 140
+DRW
+
+; Draw the right eye
+MV TX, 340
+MV TY, 120
+MV EX, 360
+MV EY, 140
+DRW
+
+; Draw the mouth
+MV TX, 280
+MV TY, 180
+MV EX, 360
+MV EY, 180
 DRW

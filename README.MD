@@ -4,7 +4,8 @@ An emulator for a device that... doesnt exist?
 ### Emulating
 Before being able to emulate, you must have
 these requirements:
-- Python >= 3.8
+- Python 3.8+
+- Numpy  1.2+
 
 After those are installed then you can
 emulate doing this:         <br />
@@ -27,3 +28,13 @@ This is the code on assembling:  <br />
 `$ python assembler.py code.asm` <br />
 replace \`code.asm\` with the filename of your assembly
 code.
+
+### Opcodes
+| Hex Code      | PY Equivelant  | Explanation   |
+|-------------- |----------------|---------------|
+| 0x2B6         | screen.clear()         | Clears the screen        |
+| 0x7D0         | screen.draw(TX, TY, EX, EY)         | Draws pixels from point (TX, YX) to point (EX, YX) with white        |
+| 0xB           | TX = ?         | Sets TX to value provided         |
+| 0xC           | TY = ?         | Sets TY to value provided         |
+| 0x9           | EX = ?         | Sets EX to value provided         |
+| 0xA           | EY = ?         | Sets EY to value provided         |
