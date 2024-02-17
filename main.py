@@ -110,6 +110,6 @@ class Chip:
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         game = Chip()
-        rom = "./"+sys.argv[1]
+        rom = "./roms/"+sys.argv[1]
         game.load_rom(rom)
         game.run()
