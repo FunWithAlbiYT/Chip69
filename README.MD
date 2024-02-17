@@ -34,7 +34,7 @@ code.
 |-------------- |----------------|---------------|
 | 0x2B6         | screen.clear()         | Clears the screen        |
 | 0x7D0         | screen.draw(TX, TY, EX, EY)         | Draws pixels from point (TX, YX) to point (EX, YX) with white        |
-| 0xB           | TX = ?         | Sets TX to value provided         |
-| 0xC           | TY = ?         | Sets TY to value provided         |
-| 0x9           | EX = ?         | Sets EX to value provided         |
-| 0xA           | EY = ?         | Sets EY to value provided         |
+| 0xB           | TX = ?         | Sets TX to value to last two bytes of opcode         |
+| 0xC           | TY = ?         | Sets TY to value to last two bytes of opcode         |
+| 0x9           | EX = ?         | Sets EX to value to last two bytes of opcode         |
+| 0xA           | EY = ?         | Sets EY to value to last two bytes of opcode         |
