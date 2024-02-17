@@ -104,7 +104,7 @@ def drw():
 
 @registry.register("DRL")
 def drl():
-    codes.append(int(0x7D0))
+    codes.append(int(0x45))
 
 @registry.register("SLP")
 def slp():
