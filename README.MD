@@ -5,6 +5,7 @@ An emulator for a device that... doesn't exist?
 Before being able to emulate, you must have
 these requirements:
 - Python 3.8+
+- PyGame ?.?
 
 After those are installed then you can
 emulate doing this:         <br />

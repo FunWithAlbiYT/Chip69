@@ -13,10 +13,10 @@ class Chip:
 
         self.waitTime = time()
 
-        self.vram = [[randint(0, 255) for _ in range(640)] for _ in range(320)]
+        self.vram = [[randint(0, 10) for _ in range(640)] for _ in range(320)]
         self.memory = [0] * 4096
         self.registers = [0] * 5
-        self.pc = 0x0
+        self.pc = 0xFF
 
         self.opcodes = {
             0x2B6: self.op_2B6, # CLS
@@ -66,7 +66,7 @@ class Chip:
         self.waitTime = time()
 
     def op_B(self, opcode):
-        # 0B: Set register TX to last two bytes of opcode
+        # B: Set register TX to last two bytes of opcode
         if opcode >> 8 in self.argcodes:
             value = opcode & 0xFF
         else:
@@ -100,14 +100,12 @@ class Chip:
             value = opcode & 0xFFF
 
         self.registers[3] = value
-    
+
     def op_1(self, opcode):
-        # 1: Set register TF to last two bytes of 
-        if (opcode & 0xF0) >> 4 in self.argcodes:
-            value = opcode & 0xF
-        elif opcode >> 8 in self.argcodes:
+        # 1: Set register TF to last two bytes of opcode
+        if opcode >> 8 in self.argcodes:
             value = opcode & 0xFF
-        elif (opcode >> 12) & 0xFFF in self.argcodes:
+        else:
             value = opcode & 0xFFF
 
         self.registers[4] = value
@@ -144,11 +142,14 @@ class Chip:
         while True:
             opcode = self.fetch_opcode()
             self.execute_opcode(opcode)
+
+            print(self.registers[4])
+
             self._check_events()
             self._update_screen()
 
     def fetch_opcode(self):
-        if self.pc >= len(self.memory):
+        if self.pc >= len(self.memory) - 1:
             return 0x0
         
         if (time() - self.waitTime) >= self.registers[4]:
@@ -173,6 +174,7 @@ class Chip:
             self.argcodes[int(hex(opcode).replace('0x', '')[:2], 16)](opcode)
         elif opcode != 0x0:
             print("Invalid instruction: " + hex(opcode))
+            return
 
     def _check_events(self):
         for event in pygame.event.get():
@@ -200,7 +202,7 @@ class Chip:
             rom_data = f.read()
 
         for i, byte in enumerate(rom_data):
-            self.memory[0x0 + i] = byte
+            self.memory[0xFF + i] = byte
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
