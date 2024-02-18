@@ -34,6 +34,9 @@ class Chip:
             0x1: self.op_1,    # MV TF
             0x45: self.op_45,  # DRL
             0x50: self.op_50,  # DRN
+            0x5: self.op_5,    # SE
+            0x10: self.op_10,  # SNE
+            0x8: self.op_8,    # CMP
         }
 
         self.screen = pygame.display.set_mode((640, 320))
@@ -69,6 +72,25 @@ class Chip:
         # 3E7: Exits the currently loaded ROM
         self.vram = [[0] * 640 for _ in range(320)]
         self.memory = [0] * 4096
+
+        letters = "UNLOADED ROM"
+        spaceCalc = 25
+
+        for letter in letters:
+            if letter == ' ':
+                spaceCalc += 10
+                continue
+            else:
+                spaceCalc += 8
+            original_letter = fontset.letters[letter]
+            scaled_letter = self.scale(original_letter, 2, 2)
+            for y, row in enumerate(scaled_letter):
+                for x, pixel in enumerate(row):
+                    if pixel == 1:
+                        if 0 <= spaceCalc + x < 640 and 0 <= 25 + y < 320:
+                            self.vram[25 + y][spaceCalc + x] = 1
+            spaceCalc += 2
+
 
     def op_1EC(self):
         # 1EC: Stops the program for a TF amount of time
@@ -112,6 +134,8 @@ class Chip:
     
     def op_1(self, opcode):
         # 1: Set register TF to last two bytes of 
+        value = 0x0
+
         if (opcode & 0xF0) >> 4 in self.argcodes:
             value = opcode & 0xF
         elif opcode >> 8 in self.argcodes:
@@ -158,6 +182,29 @@ class Chip:
                         if 0 <= TX + x < 640 and 0 <= TY + y < 320:
                             self.vram[TY + y][TX + x] = 1
 
+    def op_5(self, opcode):
+        # 5: Skips next instruction if last comparison is equal
+        if self.memory[0] == self.memory[1]:
+            self.pc += 2
+
+    def op_10(self, opcode):
+        # 10: Skips next instruction if last comparison is not equal
+        if self.memory[0] != self.memory[1]:
+            self.pc += 2
+
+    def op_8(self, opcode):
+        # 8: Gets the two next hexes store in memory as values and stores
+        #    them in memory slots 0x1 and 0x2 for comparison
+        addr = self.pc + 1  # Next memory address after the opcode
+        value1 = self.memory[addr]
+        value2 = self.memory[addr + 2]
+
+        self.memory[0] = value1
+        self.memory[1] = value2
+
+        self.pc += 4
+
+
     def run(self):
         while True:
             opcode = self.fetch_opcode()
@@ -170,15 +217,20 @@ class Chip:
             return 0x0
         
         if (time() - self.waitTime) >= self.registers[4]:
-            opcode = self.memory[self.pc] << 8 | self.memory[self.pc + 1]
-            self.pc += 2
-            return opcode
+            if len(self.memory) >= self.pc:
+                opcode = self.memory[self.pc] << 8 | self.memory[self.pc + 1]
+                self.pc += 2
+                return opcode
+            else:
+                return 0x0
         else:
             return 0x0
     
     def execute_opcode(self, opcode):
         if opcode in self.opcodes:
             self.opcodes[opcode]()
+        elif int(hex(opcode).replace('0x', '')[:2], 16) in self.argcodes:
+            self.argcodes[int(hex(opcode).replace('0x', '')[:2], 16)](opcode)
         elif opcode >> 8 in self.argcodes:
             self.argcodes[opcode >> 8](opcode)
         elif (opcode >> 12) & 0xFFF in self.argcodes:
@@ -187,8 +239,6 @@ class Chip:
             self.argcodes[(opcode & 0xF0) >> 4](opcode)
         elif opcode & 0xFF00 in self.argcodes:
             self.argcodes[opcode & 0xFF00](opcode)
-        elif int(hex(opcode).replace('0x', '')[:2], 16) in self.argcodes:
-            self.argcodes[int(hex(opcode).replace('0x', '')[:2], 16)](opcode)
         elif opcode != 0x0:
             print("Invalid instruction: " + hex(opcode))
 

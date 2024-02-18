@@ -44,4 +44,7 @@ code.
 | 0x1A4         | registers.clear()         | Sets value of all registers to 0        |
 | 0x3E7          | RAM.clear()         |   Exits the current ROM       |
 | 0x1EC          | time.sleep(TF)         | Sleeps for a TF amount of seconds         |
+| 0x5          | if (val1 == val2)         | Skips next instruction if last comparison is equal         |
+| 0x10         | if (val1 != val2)      | Skips next instruction if last comparison is not equal         |
+| 0x8         | math.compare(val1, val2)      | Skips next instruction if last comparison is not equal         |
 

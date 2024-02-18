@@ -74,19 +74,22 @@ class StatementRegistry:
         else:
             error(
                 f"Statement doesn't exist: `{signature}`",
-                f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine)))}",
+                f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine))).split(';', 1)[0].strip()}",
                 f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), signature)}{'^' * (ends(getline(fileContent, currentLine), signature) - starts(getline(fileContent, currentLine), code))}"
             )
 
 tokenizer = Tokenizer({
     'CLS': r'\bCLS\b',
     'CLR': r'\bCLR\b',
+    'CMP': r'\bCMP\b',
     'DRW': r'\bDRW\b',
     'DRL': r'\bDRL\b',
     'DRN': r'\bDRN\b',
     'SLP': r'\bSLP\b',
     'EXT': r'\bEXT\b',
     'MV': r'\bMV\b',
+    'SE': r'\bSE\b',
+    'SNE': r'\bSNE\b',
     'INT': r'\b\d+\b',
     'REG': r'\b(TX|TY|EX|EY|TF)\b',
     'SPACE': r'\s+',
@@ -97,19 +100,27 @@ registry = StatementRegistry()
 
 @registry.register("CLS")
 def cls():
-    codes.append(int(0x2B6))
+    codes.append(0x2B6)
 
 @registry.register("DRW")
 def drw():
-    codes.append(int(0x7D0))
+    codes.append(0x7D0)
 
 @registry.register("SLP")
 def slp():
-    codes.append(int(0x1EC))
+    codes.append(0x1EC)
+
+@registry.register("SE")
+def se():
+    codes.append(0x5)
+
+@registry.register("SNE")
+def sne():
+    codes.append(0x10)
 
 @registry.register("EXT")
 def ext():
-    codes.append(int(0x3E7))
+    codes.append(0x3E7)
 
 @registry.register("CLR")
 def clr():
@@ -125,7 +136,7 @@ def drl(args):
         eCode = str(args[0])
         error(
             f"INT out of range: `{eCode}`",
-            f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine)))}",
+            f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine))).split(';', 1)[0].strip()}",
             f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), eCode)}{'^' * (ends(getline(fileContent, currentLine), eCode) - starts(getline(fileContent, currentLine), eCode))}"
         )
 
@@ -139,9 +150,33 @@ def drl(args):
         eCode = str(args[0])
         error(
             f"INT out of range: `{eCode}`",
-            f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine)))}",
+            f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine))).split(';', 1)[0].strip()}",
             f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), eCode)}{'^' * (ends(getline(fileContent, currentLine), eCode) - starts(getline(fileContent, currentLine), eCode))}"
         )
+
+@registry.register("CMP SPACE INT COMMA SPACE INT")
+def cmr(args):
+    value1 = args[0]
+    value2 = args[1]
+    wrongValue = -1
+
+    if len(hex(value1).replace("0x", '')) > 4:
+        wrongValue = 0
+    
+    if len(hex(value2).replace("0x", '')) > 4:
+        wrongValue = 1
+
+    if wrongValue >= 0:
+        eCode = str(args[wrongValue])
+        error(
+            f"INT out of range: `{eCode}`",
+            f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine))).split(';', 1)[0].strip()}",
+            f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), eCode)}{'^' * (ends(getline(fileContent, currentLine), eCode) - starts(getline(fileContent, currentLine), eCode))}"
+        )
+    else:
+        codes.append(0x8)
+        codes.append(value1)
+        codes.append(value2)
 
 @registry.register("MV SPACE REG COMMA SPACE INT")
 def mv(args):
@@ -163,7 +198,7 @@ def mv(args):
         eCode = str(args[1])
         error(
             f"INT out of range: `{eCode}`",
-            f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine)))}",
+            f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine))).split(';', 1)[0].strip().split(';', 1)[0].strip()}",
             f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), eCode)}{'^' * (ends(getline(fileContent, currentLine), eCode) - starts(getline(fileContent, currentLine), eCode))}"
         )
 
@@ -176,7 +211,7 @@ def preprocess(code):
         if len(result) > 6:
             error(
                 f"Resulting value out of range: `{eCode}`",
-                f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine)))}",
+                f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine))).split(';', 1)[0].strip()}",
                 f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), eCode)}{'^' * len(eCode)}"
             )
         return result
@@ -204,7 +239,7 @@ def parse(code):
             if unknown_token:
                 error(
                     f"Token doesn't exist: `{unknown_token}`",
-                    f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine)))}",
+                    f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine))).split(';', 1)[0].strip()}",
                     f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), unknown_token)}{'^' * len(unknown_token)}"
                 )
                 unknown_token = ''
@@ -227,7 +262,7 @@ def parse(code):
     if unknown_token:
         error(
             f"Token doesn't exist: `{unknown_token}`",
-            f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine)))}",
+            f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine))).split(';', 1)[0].strip()}",
             f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), unknown_token)}{'^' * len(unknown_token)}"
         )
 

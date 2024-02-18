@@ -43,18 +43,25 @@ MV TX, (30 * 2)
 MV TY, 25
 DRL 9
 
-; Draws number `6`
+; Draws number `5`
 MV TX, (35 * 2)
 MV TY, 25
-DRN 6
 
-; Draws number `9`
+CMP 1, 2 ; Compare 1 with 2
+SE       ; Skip next instruction if 1 == 2
+
+DRN 5    ; Draws number `0`
+
 MV TX, (40 * 2)
 MV TY, 25
-DRN 9
+
+CMP 1, 1 ; Compare 1 with 1
+SNE      ; Skip next instruction if 1 != 1
+
+DRN 0    ; Draws number `0`
 
 ; Sleeps for TF seconds
-MV TF, 8
+MV TF, 5
 SLP
 
 CLR ; Set the value of all registers to 0
