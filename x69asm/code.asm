@@ -29,23 +29,27 @@ MV EX, 360
 MV EY, 180
 DRW
 
+; When drawing letters or numbers you can
+; set the size * that you want for it
+MV TF, 2
+
 ; Draws letter `H`
-MV TX, 25
+MV TX, (25 * 2)
 MV TY, 25
 DRL 8
 
 ; Draws letter `I`
-MV TX, 30
+MV TX, (30 * 2)
 MV TY, 25
 DRL 9
 
 ; Draws number `6`
-MV TX, 35
+MV TX, (35 * 2)
 MV TY, 25
 DRN 6
 
 ; Draws number `9`
-MV TX, 40
+MV TX, (40 * 2)
 MV TY, 25
 DRN 9
 

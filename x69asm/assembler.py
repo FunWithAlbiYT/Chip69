@@ -167,11 +167,32 @@ def mv(args):
             f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), eCode)}{'^' * (ends(getline(fileContent, currentLine), eCode) - starts(getline(fileContent, currentLine), eCode))}"
         )
 
+def preprocess(code):
+    pattern = r'\((\d+)\s*([+\-*/])\s*(\d+)\)'
+    def repl(match):
+        result = str(eval(match.group(0)))
+        eCode = '('+' '.join(re.search(pattern, code).groups())+')'
+
+        if len(result) > 6:
+            error(
+                f"Resulting value out of range: `{eCode}`",
+                f"{' ' * 4}{currentLine}{' ' * (5 - len(str(currentLine)))}|{' ' * 4}{getline(fileContent, int(str(currentLine)))}",
+                f"{' ' * 9}|{' ' * 4}{' ' * starts(getline(fileContent, currentLine), eCode)}{'^' * len(eCode)}"
+            )
+        return result
+    return re.sub(pattern, repl, code)
+
 def parse(code):
     code = code.strip()
     if not code or code.startswith(';'):
         return 
     code = code.split(';', 1)[0].strip()
+
+    code = preprocess(code)
+
+    if compileFile == False:
+        return
+
     tokens = tokenizer.tokenize(code)
     current_tokens = []
     arg_tokens = []

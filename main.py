@@ -13,7 +13,7 @@ class Chip:
 
         self.waitTime = time()
 
-        self.vram = [[randint(0, 10) for _ in range(640)] for _ in range(320)]
+        self.vram = [[randint(0, 255) for _ in range(640)] for _ in range(320)]
         self.memory = [0] * 4096
         self.registers = [0] * 5
         self.pc = 0xFF
@@ -38,6 +38,15 @@ class Chip:
 
         self.screen = pygame.display.set_mode((640, 320))
         pygame.display.set_caption("Chip69 Emulator")
+
+    def scale(self, character, scale_x, scale_y):
+        scaled = []
+        for row in character:
+            scaled_row = []
+            for pixel in row:
+                scaled_row.extend([pixel] * scale_x)
+            scaled.extend([scaled_row] * scale_y)
+        return scaled
 
     def op_2B6(self):
         # 2B6: Clears the screen
@@ -66,7 +75,7 @@ class Chip:
         self.waitTime = time()
 
     def op_B(self, opcode):
-        # B: Set register TX to last two bytes of opcode
+        # 0B: Set register TX to last two bytes of opcode
         if opcode >> 8 in self.argcodes:
             value = opcode & 0xFF
         else:
@@ -100,39 +109,50 @@ class Chip:
             value = opcode & 0xFFF
 
         self.registers[3] = value
-
+    
     def op_1(self, opcode):
-        # 1: Set register TF to last two bytes of opcode
-        if opcode >> 8 in self.argcodes:
+        # 1: Set register TF to last two bytes of 
+        if (opcode & 0xF0) >> 4 in self.argcodes:
+            value = opcode & 0xF
+        elif opcode >> 8 in self.argcodes:
             value = opcode & 0xFF
-        else:
+        elif (opcode >> 12) & 0xFFF in self.argcodes:
             value = opcode & 0xFFF
 
         self.registers[4] = value
 
     def op_45(self, opcode):
         # 45: Draws a letter from the built-in fontset at Xpos TX and Ypos TY starting position
+        #     And multiplies it's size by TF
         TX = self.registers[0]
         TY = self.registers[1]
+        TF = self.registers[4]
 
         letter = chr(int(hex(opcode).replace('0x', '')[2:], 16) + 64)
 
         if letter in fontset.letters:
-            for y, row in enumerate(fontset.letters[letter]):
+            original_letter = fontset.letters[letter]
+            scaled_letter = self.scale(original_letter, TF, TF)
+            for y, row in enumerate(scaled_letter):
                 for x, pixel in enumerate(row):
                     if pixel == 1:
                         if 0 <= TX + x < 640 and 0 <= TY + y < 320:
                             self.vram[TY + y][TX + x] = 1
 
+
     def op_50(self, opcode):
         # 50: Draws a number from the built-in fontset at Xpos TX and Ypos TY starting position
+        #     and multiplies it's size by TF
         TX = self.registers[0]
         TY = self.registers[1]
+        TF = self.registers[4]
 
-        nr = hex(opcode).replace('0x', '')[2:]
+        number = hex(opcode).replace('0x', '')[2:]
 
-        if nr in fontset.numbers:
-            for y, row in enumerate(fontset.numbers[nr]):
+        if number in fontset.numbers:
+            original_number = fontset.numbers[number]
+            scaled_number = self.scale(original_number, TF, TF)
+            for y, row in enumerate(scaled_number):
                 for x, pixel in enumerate(row):
                     if pixel == 1:
                         if 0 <= TX + x < 640 and 0 <= TY + y < 320:
@@ -142,14 +162,11 @@ class Chip:
         while True:
             opcode = self.fetch_opcode()
             self.execute_opcode(opcode)
-
-            print(self.registers[4])
-
             self._check_events()
             self._update_screen()
 
     def fetch_opcode(self):
-        if self.pc >= len(self.memory) - 1:
+        if self.pc >= len(self.memory):
             return 0x0
         
         if (time() - self.waitTime) >= self.registers[4]:
@@ -174,7 +191,6 @@ class Chip:
             self.argcodes[int(hex(opcode).replace('0x', '')[:2], 16)](opcode)
         elif opcode != 0x0:
             print("Invalid instruction: " + hex(opcode))
-            return
 
     def _check_events(self):
         for event in pygame.event.get():
