@@ -193,17 +193,16 @@ class Chip:
             self.pc += 2
 
     def op_8(self, opcode):
-        # 8: Gets the two next hexes store in memory as values and stores
-        #    them in memory slots 0x1 and 0x2 for comparison
-        addr = self.pc + 1  # Next memory address after the opcode
+        # 8: Gets the two next hexes stored in memory as values and stores
+        #    them in memory slots 0x0 and 0x1 for comparison
+        addr = self.pc + 0x1
         value1 = self.memory[addr]
-        value2 = self.memory[addr + 2]
+        value2 = self.memory[addr + 0x2]
 
         self.memory[0] = value1
         self.memory[1] = value2
 
         self.pc += 4
-
 
     def run(self):
         while True:
